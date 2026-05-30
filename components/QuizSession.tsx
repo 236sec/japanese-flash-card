@@ -3,11 +3,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { createSession, submitAnswer, advance } from '@/lib/quiz/engine'
 import ScoreScreen from '@/components/ScoreScreen'
-import type { SessionState, Score } from '@/lib/quiz/types'
+import OnScreenKeyboard from '@/components/OnScreenKeyboard'
+import type { SessionState, Score, Direction } from '@/lib/quiz/types'
 import type { KanaChar } from '@/lib/kana/data'
 
 interface QuizSessionProps {
   chars: KanaChar[]
+  direction: Direction
   onFinish: (score: Score) => void
   onBack: () => void
 }
@@ -23,9 +25,14 @@ function formatTime(ms: number): string {
   return `${seconds}.${tenths}s`
 }
 
-export default function QuizSession({ chars, onFinish, onBack }: QuizSessionProps) {
+export default function QuizSession({
+  chars,
+  direction,
+  onFinish,
+  onBack,
+}: QuizSessionProps) {
   const [state, setState] = useState<SessionState>(() =>
-    createSession(chars, 'kana→romaji'),
+    createSession(chars, direction),
   )
   const [currentAnswer, setCurrentAnswer] = useState('')
   const [elapsedMs, setElapsedMs] = useState(0)
@@ -56,9 +63,11 @@ export default function QuizSession({ chars, onFinish, onBack }: QuizSessionProp
       ? state.shuffled[state.currentIndex]
       : null
 
-  const totalChars = state.phase === 'finished' ? state.score.total : chars.length
+  const totalChars =
+    state.phase === 'finished' ? state.score.total : chars.length
   const answeredCount =
     state.phase === 'selecting' ? 0 : state.answered.length
+  const isRomajiToKana = direction === 'romaji→kana'
 
   const handleSubmit = useCallback(() => {
     if (state.phase !== 'quizzing') return
@@ -99,16 +108,20 @@ export default function QuizSession({ chars, onFinish, onBack }: QuizSessionProp
     [state.phase, handleSubmit, handleAdvance],
   )
 
+  const handleCommitChar = useCallback((char: string) => {
+    setCurrentAnswer(prev => prev + char)
+  }, [])
+
   const handleRetry = useCallback(
     (missedChars: KanaChar[]) => {
-      const nextState = createSession(missedChars, 'kana→romaji')
+      const nextState = createSession(missedChars, direction)
       setState(nextState)
       setCurrentAnswer('')
       setElapsedMs(0)
       setSessionKey(k => k + 1)
       startTimeRef.current = Date.now()
     },
-    [],
+    [direction],
   )
 
   // ── Score screen ─────────────────────────────────────────────
@@ -140,7 +153,9 @@ export default function QuizSession({ chars, onFinish, onBack }: QuizSessionProp
         <div
           className="bg-blue-500 h-2 rounded-full transition-all duration-300"
           style={{
-            width: `${totalChars > 0 ? (answeredCount / totalChars) * 100 : 0}%`,
+            width: `${
+              totalChars > 0 ? (answeredCount / totalChars) * 100 : 0
+            }%`,
           }}
         />
       </div>
@@ -148,12 +163,25 @@ export default function QuizSession({ chars, onFinish, onBack }: QuizSessionProp
       {/* Prompt */}
       {currentChar && (
         <div className="text-center mb-8">
-          <div className="text-7xl font-medium mb-2 select-all">
-            {currentChar.glyph}
-          </div>
-          <div className="text-sm text-gray-400">
-            Type the romaji reading
-          </div>
+          {isRomajiToKana ? (
+            <>
+              <div className="text-7xl font-mono font-medium mb-2 tracking-wider select-all">
+                {currentChar.romaji}
+              </div>
+              <div className="text-sm text-gray-400">
+                Type the kana character
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-7xl font-medium mb-2 select-all">
+                {currentChar.glyph}
+              </div>
+              <div className="text-sm text-gray-400">
+                Type the romaji reading
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -166,7 +194,7 @@ export default function QuizSession({ chars, onFinish, onBack }: QuizSessionProp
             value={currentAnswer}
             onChange={e => setCurrentAnswer(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="e.g. ka"
+            placeholder={isRomajiToKana ? 'e.g. か' : 'e.g. ka'}
             autoComplete="off"
             autoFocus
             className="flex-1 px-4 py-3 border border-gray-300 rounded-lg
@@ -187,11 +215,18 @@ export default function QuizSession({ chars, onFinish, onBack }: QuizSessionProp
         </div>
       )}
 
+      {/* On-screen keyboard for romaji→kana */}
+      {state.phase === 'quizzing' && isRomajiToKana && (
+        <OnScreenKeyboard onCommitChar={handleCommitChar} />
+      )}
+
       {/* Reviewing: feedback + Next button */}
       {state.phase === 'reviewing' && currentChar && (
         <div>
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-center">
-            <div className="text-sm text-red-500 font-medium mb-1">Incorrect</div>
+            <div className="text-sm text-red-500 font-medium mb-1">
+              Incorrect
+            </div>
             <div className="text-gray-600">
               Your answer:{' '}
               <span className="text-red-600 font-medium line-through">

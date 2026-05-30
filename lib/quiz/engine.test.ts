@@ -13,11 +13,20 @@ describe('Quiz Engine', () => {
 
       expect(state.currentIndex).toBe(0)
       expect(state.answered).toEqual([])
+      expect(state.direction).toBe('kana→romaji')
       // shuffled contains exactly the input characters
       expect(state.shuffled).toHaveLength(chars.length)
       expect(state.shuffled.map(c => c.glyph).sort()).toEqual(
         chars.map(c => c.glyph).sort(),
       )
+    })
+
+    it('stores direction in the session state', () => {
+      const chars = [getAllChars()[0]]
+      const state = createSession(chars, 'romaji→kana')
+      expect(state.phase).toBe('quizzing')
+      if (state.phase !== 'quizzing') return
+      expect(state.direction).toBe('romaji→kana')
     })
   })
 
@@ -38,6 +47,7 @@ describe('Quiz Engine', () => {
 
       expect(next.currentIndex).toBe(1)
       expect(next.answered).toHaveLength(1)
+      expect(next.direction).toBe('kana→romaji')
       expect(next.answered[0]).toEqual({
         character: prompt,
         correct: true,
@@ -46,6 +56,50 @@ describe('Quiz Engine', () => {
       })
       // shuffled array preserved
       expect(next.shuffled).toEqual(state.shuffled)
+    })
+
+    it('validates kana glyph answer in romaji→kana direction', () => {
+      const aChar = getAllChars().find(c => c.romaji === 'a')!
+      const iChar = getAllChars().find(c => c.romaji === 'i')!
+      const state = createSession([aChar, iChar], 'romaji→kana')
+      if (state.phase !== 'quizzing') throw new Error('expected quizzing')
+
+      const prompt = state.shuffled[0]
+      const next = submitAnswer(state, prompt.glyph, 1500)
+
+      expect(next.phase).toBe('quizzing')
+      if (next.phase !== 'quizzing') return
+
+      expect(next.currentIndex).toBe(1)
+      expect(next.answered[0].correct).toBe(true)
+      expect(next.answered[0].userAnswer).toBe(prompt.glyph)
+      expect(next.direction).toBe('romaji→kana')
+    })
+
+    it('marks wrong answer in romaji→kana direction and shows correct glyph as correctAnswer', () => {
+      const kaChar = getAllChars().find(c => c.romaji === 'ka')!
+      const state = createSession([kaChar], 'romaji→kana')
+      if (state.phase !== 'quizzing') throw new Error('expected quizzing')
+
+      const next = submitAnswer(state, 'あ', 500)
+
+      expect(next.phase).toBe('reviewing')
+      if (next.phase !== 'reviewing') return
+
+      expect(next.answered[0].correct).toBe(false)
+      expect(next.correctAnswer).toBe(kaChar.glyph)
+      expect(next.direction).toBe('romaji→kana')
+    })
+
+    it('preserves direction in reviewing phase', () => {
+      const chars = [getAllChars().find(c => c.romaji === 'ka')!]
+      const state = createSession(chars, 'kana→romaji')
+      if (state.phase !== 'quizzing') throw new Error('expected quizzing')
+
+      const next = submitAnswer(state, 'wrong', 500)
+      expect(next.phase).toBe('reviewing')
+      if (next.phase !== 'reviewing') return
+      expect(next.direction).toBe('kana→romaji')
     })
 
     it('transitions to reviewing phase on wrong answer with correct answer shown', () => {
@@ -77,6 +131,18 @@ describe('Quiz Engine', () => {
       if (next.phase !== 'finished') return
       expect(next.score.correct).toBe(1)
       expect(next.score.incorrect).toBe(0)
+    })
+
+    it('validates kana answer exactly (no trimming/folding for CJK)', () => {
+      const kaChar = getAllChars().find(c => c.romaji === 'ka')!
+      const state = createSession([kaChar], 'romaji→kana')
+      if (state.phase !== 'quizzing') throw new Error('expected quizzing')
+
+      // Submit the correct kana glyph
+      const next = submitAnswer(state, kaChar.glyph, 200)
+      expect(next.phase).toBe('finished')
+      if (next.phase !== 'finished') return
+      expect(next.score.correct).toBe(1)
     })
   })
 

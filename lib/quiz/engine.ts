@@ -16,7 +16,7 @@ function shuffle<T>(arr: T[]): T[] {
  */
 export function createSession(
   chars: KanaChar[],
-  _direction: Direction,
+  direction: Direction,
 ): SessionState {
   const shuffled = shuffle([...chars])
 
@@ -25,13 +25,29 @@ export function createSession(
     currentIndex: 0,
     answered: [],
     shuffled,
+    direction,
   }
 }
 
-/**
- * Submit an answer for the current prompt.
- * Returns the next state based on correctness.
- */
+function getExpectedAnswer(
+  char: KanaChar,
+  direction: Direction,
+): string {
+  return direction === 'kana→romaji' ? char.romaji : char.glyph
+}
+
+function checkAnswer(
+  answer: string,
+  char: KanaChar,
+  direction: Direction,
+): boolean {
+  if (direction === 'kana→romaji') {
+    return answer.trim().toLowerCase() === char.romaji
+  }
+  // romaji→kana: compare kana glyph exactly
+  return answer.trim() === char.glyph
+}
+
 export function submitAnswer(
   state: SessionState,
   answer: string,
@@ -40,8 +56,7 @@ export function submitAnswer(
   if (state.phase !== 'quizzing') return state
 
   const currentChar = state.shuffled[state.currentIndex]
-  const normalized = answer.trim().toLowerCase()
-  const correct = normalized === currentChar.romaji
+  const correct = checkAnswer(answer, currentChar, state.direction)
 
   const result = {
     character: currentChar,
@@ -72,6 +87,7 @@ export function submitAnswer(
       currentIndex: state.currentIndex + 1,
       answered,
       shuffled: state.shuffled,
+      direction: state.direction,
     }
   }
 
@@ -81,8 +97,9 @@ export function submitAnswer(
     currentIndex: state.currentIndex,
     answered,
     lastAnswer: answer,
-    correctAnswer: currentChar.romaji,
+    correctAnswer: getExpectedAnswer(currentChar, state.direction),
     shuffled: state.shuffled,
+    direction: state.direction,
   }
 }
 
@@ -114,5 +131,6 @@ export function advance(state: SessionState): SessionState {
     currentIndex: state.currentIndex + 1,
     answered: state.answered,
     shuffled: state.shuffled,
+    direction: state.direction,
   }
 }

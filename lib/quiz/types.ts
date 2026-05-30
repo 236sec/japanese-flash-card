@@ -1,6 +1,6 @@
 import type { KanaChar } from '@/lib/kana/data'
 
-export type Direction = 'kana→romaji'
+export type Direction = 'kana→romaji' | 'romaji→kana'
 
 export interface AnswerResult {
   character: KanaChar
@@ -17,6 +17,23 @@ export interface Score {
   misses: KanaChar[]
 }
 
+export interface MissEntry {
+  glyph: string
+  romaji: string
+}
+
+/** A Score that has been persisted to history (serializable). */
+export interface ScoreEntry {
+  id: string
+  date: string
+  direction: Direction
+  total: number
+  correct: number
+  incorrect: number
+  elapsedMs: number
+  misses: MissEntry[]
+}
+
 export type SessionState =
   | { phase: 'selecting' }
   | {
@@ -24,6 +41,7 @@ export type SessionState =
       currentIndex: number
       answered: AnswerResult[]
       shuffled: KanaChar[]
+      direction: Direction
     }
   | {
       phase: 'reviewing'
@@ -32,5 +50,6 @@ export type SessionState =
       lastAnswer: string
       correctAnswer: string
       shuffled: KanaChar[]
+      direction: Direction
     }
   | { phase: 'finished'; score: Score; answered: AnswerResult[] }
