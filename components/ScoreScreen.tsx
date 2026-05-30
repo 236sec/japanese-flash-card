@@ -33,30 +33,30 @@ export default function ScoreScreen({
 
   return (
     <div className="max-w-lg mx-auto p-6 text-center">
-      <h2 className="text-2xl font-bold mb-2">Session Complete</h2>
-      <p className="text-gray-500 mb-6">{formatTime(elapsedMs)}</p>
+      <h2 className="text-2xl font-bold mb-2 dark:text-gray-100">Session Complete</h2>
+      <p className="text-gray-500 dark:text-gray-400 mb-6">{formatTime(elapsedMs)}</p>
 
-      <div className="text-5xl font-bold mb-6 text-blue-600">{percentage}%</div>
+      <div className="text-5xl font-bold mb-6 text-blue-600 dark:text-blue-400">{percentage}%</div>
 
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-gray-50 rounded-lg p-3">
-          <div className="text-2xl font-bold text-gray-800">{score.total}</div>
-          <div className="text-xs text-gray-500 mt-1">Total</div>
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+          <div className="text-2xl font-bold text-gray-800 dark:text-gray-100">{score.total}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total</div>
         </div>
-        <div className="bg-green-50 rounded-lg p-3">
-          <div className="text-2xl font-bold text-green-600">{score.correct}</div>
-          <div className="text-xs text-green-500 mt-1">Correct</div>
+        <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-3">
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">{score.correct}</div>
+          <div className="text-xs text-green-500 dark:text-green-400 mt-1">Correct</div>
         </div>
-        <div className="bg-red-50 rounded-lg p-3">
-          <div className="text-2xl font-bold text-red-600">{score.incorrect}</div>
-          <div className="text-xs text-red-500 mt-1">Incorrect</div>
+        <div className="bg-red-50 dark:bg-red-900/30 rounded-lg p-3">
+          <div className="text-2xl font-bold text-red-600 dark:text-red-400">{score.incorrect}</div>
+          <div className="text-xs text-red-500 dark:text-red-400 mt-1">Incorrect</div>
         </div>
       </div>
 
       {/* Missed Characters */}
       {hasMisses ? (
         <div className="mb-8">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Missed Characters
           </h3>
           <div className="flex flex-wrap justify-center gap-2">
@@ -67,11 +67,11 @@ export default function ScoreScreen({
               return (
                 <div
                   key={i}
-                  className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-center"
+                  className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg px-3 py-2 text-center"
                 >
-                  <div className="text-xl">{char.glyph}</div>
-                  <div className="text-xs text-gray-500 mt-1">{char.romaji}</div>
-                  <div className="text-xs text-red-400 mt-0.5">
+                  <div className="text-xl dark:text-gray-100">{char.glyph}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{char.romaji}</div>
+                  <div className="text-xs text-red-400 dark:text-red-400 mt-0.5">
                     You wrote: {result?.userAnswer}
                   </div>
                 </div>
@@ -81,10 +81,10 @@ export default function ScoreScreen({
         </div>
       ) : (
         <div className="mb-8">
-          <p className="text-green-600 font-medium text-lg">
+          <p className="text-green-600 dark:text-green-400 font-medium text-lg">
             Perfect score!
           </p>
-          <p className="text-gray-400 text-sm mt-1">
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
             No characters to retry
           </p>
         </div>

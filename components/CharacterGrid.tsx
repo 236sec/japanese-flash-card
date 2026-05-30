@@ -46,9 +46,9 @@ function KanaGrid({
   }
 
   return (
-    <div className="flex-1">
-      <h2 className="text-lg font-bold text-center mb-1">{label}</h2>
-      <p className="text-xs text-gray-400 text-center mb-2">
+    <div className="flex-1 min-w-0">
+      <h2 className="text-lg font-bold text-center mb-1 dark:text-gray-100">{label}</h2>
+      <p className="text-xs text-gray-400 dark:text-gray-500 text-center mb-2">
         {selectedInColumn.length} / {charsInColumn.length} selected
       </p>
       <div className="flex justify-center gap-2 mb-3">
@@ -56,8 +56,9 @@ function KanaGrid({
           type="button"
           onClick={handleSelectAll}
           disabled={allInColumnSelected}
-          className="px-3 py-1 text-xs rounded border border-gray-300
-                     bg-white hover:bg-blue-50
+          className="px-3 py-1 text-xs rounded border border-gray-300 dark:border-gray-600
+                     bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/30
+                     text-gray-700 dark:text-gray-300
                      disabled:opacity-30 disabled:cursor-not-allowed
                      transition-colors"
         >
@@ -67,8 +68,9 @@ function KanaGrid({
           type="button"
           onClick={handleDeselectAll}
           disabled={selectedInColumn.length === 0}
-          className="px-3 py-1 text-xs rounded border border-gray-300
-                     bg-white hover:bg-red-50
+          className="px-3 py-1 text-xs rounded border border-gray-300 dark:border-gray-600
+                     bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/30
+                     text-gray-700 dark:text-gray-300
                      disabled:opacity-30 disabled:cursor-not-allowed
                      transition-colors"
         >
@@ -81,7 +83,7 @@ function KanaGrid({
             <tr>
               <th className="w-10" />
               {COL_LABELS.map(col => (
-                <th key={col} className="w-14 px-1 pb-2 text-xs text-gray-500 font-normal">
+                <th key={col} className="w-14 px-1 pb-2 text-xs text-gray-500 dark:text-gray-400 font-normal">
                   {col}
                 </th>
               ))}
@@ -97,7 +99,7 @@ function KanaGrid({
 
               return (
                 <tr key={rowName}>
-                  <td className="text-xs text-gray-400 pr-2 text-right whitespace-nowrap">
+                  <td className="text-xs text-gray-400 dark:text-gray-500 pr-2 text-right whitespace-nowrap">
                     {rowName.replace('-row', '')}
                   </td>
                   {[1, 2, 3, 4, 5].map(col => {
@@ -117,8 +119,8 @@ function KanaGrid({
                                      text-xl font-medium
                                      border transition-colors cursor-pointer
                                      ${isSelected
-                                       ? 'bg-blue-100 border-blue-400 text-blue-900'
-                                       : 'bg-gray-50 border-gray-200 hover:bg-blue-50 hover:border-blue-300'
+                                       ? 'bg-blue-100 dark:bg-blue-900/50 border-blue-400 dark:border-blue-500 text-blue-900 dark:text-blue-200'
+                                       : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 text-gray-800 dark:text-gray-200'
                                      }`}
                         >
                           {char.glyph}
@@ -138,7 +140,7 @@ function KanaGrid({
               const isSelected = selectedGlyphs.has(nChar.glyph)
               return (
                 <tr>
-                  <td className="text-xs text-gray-400 pr-2 text-right">n</td>
+                  <td className="text-xs text-gray-400 dark:text-gray-500 pr-2 text-right">n</td>
                   <td colSpan={5} className="p-1">
                     <button
                       type="button"
@@ -149,8 +151,8 @@ function KanaGrid({
                                  text-xl font-medium
                                  border transition-colors cursor-pointer
                                  ${isSelected
-                                   ? 'bg-blue-100 border-blue-400 text-blue-900'
-                                   : 'bg-gray-50 border-gray-200 hover:bg-blue-50 hover:border-blue-300'
+                                   ? 'bg-blue-100 dark:bg-blue-900/50 border-blue-400 dark:border-blue-500 text-blue-900 dark:text-blue-200'
+                                   : 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 text-gray-800 dark:text-gray-200'
                                  }`}
                     >
                       {nChar.glyph}
@@ -196,11 +198,7 @@ export default function CharacterGrid({ selectedGlyphs, onSelectionChange }: Cha
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold text-center mb-6">
-        Japanese Kana Flashcard
-      </h1>
-
-      <div className="flex gap-8 justify-center">
+      <div className="flex flex-col lg:flex-row gap-8 justify-center">
         <KanaGrid
           syllabary="hiragana"
           selectedGlyphs={selectedGlyphs}
@@ -215,17 +213,13 @@ export default function CharacterGrid({ selectedGlyphs, onSelectionChange }: Cha
         />
       </div>
 
-      <div className="text-center mt-8">
-        {selectedCount === 0 ? (
-          <p className="text-gray-400 text-sm">
-            Select characters above to start practicing
-          </p>
-        ) : (
-          <p className="text-gray-600 text-sm">
+      {selectedCount > 0 && (
+        <div className="text-center mt-8">
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
             {selectedCount} character{selectedCount !== 1 ? 's' : ''} selected
           </p>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

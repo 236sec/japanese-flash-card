@@ -19,6 +19,7 @@ export default function Home() {
   const [quizChars, setQuizChars] = useState<KanaChar[]>([])
   const [scoreHistory, setScoreHistory] = useState<ScoreEntry[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [starting, setStarting] = useState(false)
   const adapterRef = useRef(
     createLocalStorageAdapter(
       typeof window !== 'undefined' ? window.localStorage : ({} as Storage),
@@ -62,15 +63,20 @@ export default function Home() {
   }, [])
 
   const handleStartQuiz = useCallback(() => {
+    if (starting) return
     const chars: KanaChar[] = []
     for (const glyph of selectedGlyphs) {
       const char = getCharByGlyph(glyph)
       if (char) chars.push(char)
     }
     if (chars.length === 0) return
+    setStarting(true)
     setQuizChars(chars)
-    setView('quizzing')
-  }, [selectedGlyphs])
+    // Use microtask to allow state to settle before view transition
+    queueMicrotask(() => {
+      setView('quizzing')
+    })
+  }, [selectedGlyphs, starting])
 
   const handleFinish = useCallback(
     (score: Score) => {
@@ -97,6 +103,7 @@ export default function Home() {
   )
 
   const handleBack = useCallback(() => {
+    setStarting(false)
     setView('selecting')
   }, [])
 
@@ -106,17 +113,20 @@ export default function Home() {
 
   const handleRetryFromHistory = useCallback(
     (misses: MissEntry[]) => {
+      if (starting) return
       const chars: KanaChar[] = []
       for (const miss of misses) {
         const char = getCharByGlyph(miss.glyph)
         if (char) chars.push(char)
       }
       if (chars.length === 0) return
+      setStarting(true)
       setQuizChars(chars)
-      setDirection(direction)
-      setView('quizzing')
+      queueMicrotask(() => {
+        setView('quizzing')
+      })
     },
-    [direction],
+    [direction, starting],
   )
 
   if (view === 'quizzing') {
@@ -160,20 +170,21 @@ export default function Home() {
       <div className="mt-6 flex flex-col items-center gap-3">
         {/* Start Quiz button */}
         {!loaded ? (
-          <p className="text-gray-400 text-sm">Loading your saved selection…</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm">Loading your saved selection…</p>
         ) : selectedGlyphs.size === 0 ? (
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-400 dark:text-gray-500 text-sm">
             Select characters above to start practicing
           </p>
         ) : (
           <button
             type="button"
             onClick={handleStartQuiz}
+            disabled={starting}
             className="px-8 py-3 bg-blue-600 text-white rounded-lg font-medium
-                       text-lg hover:bg-blue-700 transition-colors shadow-sm"
+                       text-lg hover:bg-blue-700 disabled:opacity-60
+                       disabled:cursor-not-allowed transition-colors shadow-sm"
           >
-            Start Quiz ({selectedGlyphs.size} character
-            {selectedGlyphs.size !== 1 ? 's' : ''})
+            {starting ? 'Starting…' : `Start Quiz (${selectedGlyphs.size} character${selectedGlyphs.size !== 1 ? 's' : ''})`}
           </button>
         )}
 
@@ -181,9 +192,9 @@ export default function Home() {
         <button
           type="button"
           onClick={handleViewHistory}
-          className="px-6 py-2 text-sm bg-white border border-gray-300
-                     text-gray-600 rounded-lg font-medium
-                     hover:bg-gray-50 transition-colors"
+          className="px-6 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600
+                     text-gray-600 dark:text-gray-300 rounded-lg font-medium
+                     hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
         >
           Score History
         </button>

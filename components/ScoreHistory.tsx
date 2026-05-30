@@ -46,32 +46,32 @@ function ScoreEntryCard({
   const hasMisses = entry.misses.length > 0
 
   return (
-    <div className="border border-gray-200 rounded-lg bg-white shadow-sm">
+    <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 shadow-sm">
       {/* Summary row */}
       <div className="flex items-center justify-between p-4">
-        <div className="flex items-center gap-4 flex-1 min-w-0">
+        <div className="flex items-center gap-4 flex-1 min-w-0 flex-wrap">
           {/* Date */}
-          <div className="text-xs text-gray-500 w-28 shrink-0">
+          <div className="text-xs text-gray-500 dark:text-gray-400 shrink-0">
             {formatDate(entry.date)}
           </div>
 
           {/* Direction badge */}
-          <span className="text-xs font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-600 shrink-0">
+          <span className="text-xs font-medium px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 shrink-0">
             {entry.direction}
           </span>
 
           {/* Score */}
           <div className="flex items-center gap-3">
-            <span className="text-lg font-bold text-blue-600">
+            <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
               {percentage}%
             </span>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-gray-600 dark:text-gray-400">
               {entry.correct}/{entry.total}
             </span>
           </div>
 
           {/* Time */}
-          <span className="text-xs text-gray-400 shrink-0">
+          <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0">
             {formatTime(entry.elapsedMs)}
           </span>
         </div>
@@ -79,11 +79,11 @@ function ScoreEntryCard({
         {/* Miss indicator + expand */}
         <div className="flex items-center gap-2 shrink-0">
           {hasMisses ? (
-            <span className="text-xs text-red-500 font-medium">
+            <span className="text-xs text-red-500 dark:text-red-400 font-medium">
               {entry.misses.length} missed
             </span>
           ) : (
-            <span className="text-xs text-green-500 font-medium">
+            <span className="text-xs text-green-500 dark:text-green-400 font-medium">
               Perfect
             </span>
           )}
@@ -92,8 +92,8 @@ function ScoreEntryCard({
             <button
               type="button"
               onClick={() => setExpanded(e => !e)}
-              className="text-xs px-2 py-1 rounded border border-gray-300
-                         text-gray-500 hover:bg-gray-50 transition-colors"
+              className="text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-600
+                         text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               aria-label={expanded ? 'Hide details' : 'Show details'}
             >
               {expanded ? 'Hide' : 'Show'} details
@@ -104,15 +104,15 @@ function ScoreEntryCard({
 
       {/* Expanded missed characters */}
       {expanded && hasMisses && (
-        <div className="border-t border-gray-100 px-4 py-3">
+        <div className="border-t border-gray-100 dark:border-gray-700 px-4 py-3">
           <div className="flex flex-wrap gap-2">
             {entry.misses.map((miss, i) => (
               <div
                 key={i}
-                className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-center"
+                className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg px-3 py-2 text-center"
               >
-                <div className="text-lg">{miss.glyph}</div>
-                <div className="text-xs text-gray-500">{miss.romaji}</div>
+                <div className="text-lg dark:text-gray-100">{miss.glyph}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">{miss.romaji}</div>
               </div>
             ))}
           </div>
@@ -145,7 +145,7 @@ export default function ScoreHistory({
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Score History</h1>
+        <h1 className="text-2xl font-bold dark:text-gray-100">Score History</h1>
         <button
           type="button"
           onClick={onBack}
@@ -158,8 +158,8 @@ export default function ScoreHistory({
 
       {sorted.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No sessions yet</p>
-          <p className="text-gray-400 text-sm mt-2">
+          <p className="text-gray-500 dark:text-gray-400 text-lg">No sessions yet</p>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mt-2">
             Complete a quiz to see your results here
           </p>
         </div>

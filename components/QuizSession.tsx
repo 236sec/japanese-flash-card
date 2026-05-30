@@ -141,7 +141,7 @@ export default function QuizSession({
   return (
     <div className="max-w-lg mx-auto p-6">
       {/* Header: timer + progress */}
-      <div className="flex justify-between items-center mb-6 text-sm text-gray-500">
+      <div className="flex justify-between items-center mb-6 text-sm text-gray-500 dark:text-gray-400">
         <span>{formatTime(elapsedMs)}</span>
         <span>
           {answeredCount} / {totalChars}
@@ -149,7 +149,7 @@ export default function QuizSession({
       </div>
 
       {/* Progress bar */}
-      <div className="w-full bg-gray-100 rounded-full h-2 mb-8">
+      <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2 mb-8">
         <div
           className="bg-blue-500 h-2 rounded-full transition-all duration-300"
           style={{
@@ -165,19 +165,19 @@ export default function QuizSession({
         <div className="text-center mb-8">
           {isRomajiToKana ? (
             <>
-              <div className="text-7xl font-mono font-medium mb-2 tracking-wider select-all">
+              <div className="text-7xl font-mono font-medium mb-2 tracking-wider select-all dark:text-gray-100">
                 {currentChar.romaji}
               </div>
-              <div className="text-sm text-gray-400">
+              <div className="text-sm text-gray-400 dark:text-gray-500">
                 Type the kana character
               </div>
             </>
           ) : (
             <>
-              <div className="text-7xl font-medium mb-2 select-all">
+              <div className="text-7xl font-medium mb-2 select-all dark:text-gray-100">
                 {currentChar.glyph}
               </div>
-              <div className="text-sm text-gray-400">
+              <div className="text-sm text-gray-400 dark:text-gray-500">
                 Type the romaji reading
               </div>
             </>
@@ -197,7 +197,8 @@ export default function QuizSession({
             placeholder={isRomajiToKana ? 'e.g. か' : 'e.g. ka'}
             autoComplete="off"
             autoFocus
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg
+            className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg
+                       bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
                        text-xl text-center font-medium
                        focus:outline-none focus:ring-2 focus:ring-blue-400
                        focus:border-blue-400 transition-colors"
@@ -223,19 +224,19 @@ export default function QuizSession({
       {/* Reviewing: feedback + Next button */}
       {state.phase === 'reviewing' && currentChar && (
         <div>
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-center">
-            <div className="text-sm text-red-500 font-medium mb-1">
+          <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg p-4 mb-4 text-center">
+            <div className="text-sm text-red-500 dark:text-red-400 font-medium mb-1">
               Incorrect
             </div>
-            <div className="text-gray-600">
+            <div className="text-gray-600 dark:text-gray-300">
               Your answer:{' '}
-              <span className="text-red-600 font-medium line-through">
+              <span className="text-red-600 dark:text-red-400 font-medium line-through">
                 {state.lastAnswer}
               </span>
             </div>
-            <div className="text-gray-600 mt-1">
+            <div className="text-gray-600 dark:text-gray-300 mt-1">
               Correct:{' '}
-              <span className="text-green-600 font-medium">
+              <span className="text-green-600 dark:text-green-400 font-medium">
                 {state.correctAnswer}
               </span>
             </div>

@@ -14,6 +14,18 @@ function createMockStorage(): Storage {
   }
 }
 
+function createThrowingStorage(): Storage {
+  const fn = () => { throw new Error('localStorage unavailable') }
+  return {
+    get length() { return 0 },
+    clear: fn,
+    getItem: fn,
+    key: fn,
+    removeItem: fn,
+    setItem: fn,
+  }
+}
+
 describe('LocalStorage Storage Adapter', () => {
   let mockStorage: Storage
   let adapter: ReturnType<typeof createLocalStorageAdapter>
@@ -145,6 +157,63 @@ describe('LocalStorage Storage Adapter', () => {
       await adapter.clearScoreHistory()
       const history = await adapter.getScoreHistory()
       expect(history).toEqual([])
+    })
+  })
+
+  describe('when localStorage is unavailable (throws)', () => {
+    let throwingAdapter: ReturnType<typeof createLocalStorageAdapter>
+
+    beforeEach(() => {
+      throwingAdapter = createLocalStorageAdapter(createThrowingStorage())
+    })
+
+    it('returns empty Set for character selection', async () => {
+      const selection = await throwingAdapter.getCharacterSelection()
+      expect(selection).toBeInstanceOf(Set)
+      expect(selection.size).toBe(0)
+    })
+
+    it('returns default direction', async () => {
+      const direction = await throwingAdapter.getDirection()
+      expect(direction).toBe('kana→romaji')
+    })
+
+    it('returns empty array for score history', async () => {
+      const history = await throwingAdapter.getScoreHistory()
+      expect(history).toEqual([])
+    })
+
+    it('does not throw when setting character selection', async () => {
+      await expect(
+        throwingAdapter.setCharacterSelection(new Set(['あ', 'い'])),
+      ).resolves.toBeUndefined()
+    })
+
+    it('does not throw when setting direction', async () => {
+      await expect(
+        throwingAdapter.setDirection('romaji→kana'),
+      ).resolves.toBeUndefined()
+    })
+
+    it('does not throw when adding a score entry', async () => {
+      await expect(
+        throwingAdapter.addScoreEntry({
+          id: 'test',
+          date: '2026-05-30T10:00:00.000Z',
+          direction: 'kana→romaji',
+          total: 1,
+          correct: 1,
+          incorrect: 0,
+          elapsedMs: 100,
+          misses: [],
+        }),
+      ).resolves.toBeUndefined()
+    })
+
+    it('does not throw when clearing score history', async () => {
+      await expect(
+        throwingAdapter.clearScoreHistory(),
+      ).resolves.toBeUndefined()
     })
   })
 })

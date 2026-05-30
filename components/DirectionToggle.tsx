@@ -18,10 +18,10 @@ export default function DirectionToggle({
 }: DirectionToggleProps) {
   return (
     <div className="flex items-center justify-center gap-2">
-      <span className="text-sm text-gray-500 font-medium mr-1">
+      <span className="text-sm text-gray-500 dark:text-gray-400 font-medium mr-1">
         Direction:
       </span>
-      <div className="flex rounded-lg border border-gray-300 overflow-hidden">
+      <div className="flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
         {DIRECTIONS.map(dir => (
           <button
             key={dir.value}
@@ -30,7 +30,7 @@ export default function DirectionToggle({
             className={`px-4 py-2 text-sm font-medium transition-colors ${
               value === dir.value
                 ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
+                : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
           >
             {dir.label}

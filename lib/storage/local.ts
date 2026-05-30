@@ -14,9 +14,42 @@ export interface StorageAdapter {
   clearScoreHistory(): Promise<void>
 }
 
+/**
+ * Safely read from storage, returning defaultValue if unavailable or throws.
+ */
+function safeGetItem(storage: Storage, key: string): string | null {
+  try {
+    return storage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Safely write to storage—silently ignore if unavailable.
+ */
+function safeSetItem(storage: Storage, key: string, value: string): void {
+  try {
+    storage.setItem(key, value)
+  } catch {
+    // storage unavailable — silently ignore
+  }
+}
+
+/**
+ * Safely remove a key from storage—silently ignore if unavailable.
+ */
+function safeRemoveItem(storage: Storage, key: string): void {
+  try {
+    storage.removeItem(key)
+  } catch {
+    // storage unavailable — silently ignore
+  }
+}
+
 export function createLocalStorageAdapter(storage: Storage): StorageAdapter {
   function parseStoredSelection(): Set<string> {
-    const raw = storage.getItem(SELECTION_KEY)
+    const raw = safeGetItem(storage, SELECTION_KEY)
     if (!raw) return new Set()
     try {
       const arr: string[] = JSON.parse(raw)
@@ -27,7 +60,7 @@ export function createLocalStorageAdapter(storage: Storage): StorageAdapter {
   }
 
   function parseScoreHistory(): ScoreEntry[] {
-    const raw = storage.getItem(SCORE_HISTORY_KEY)
+    const raw = safeGetItem(storage, SCORE_HISTORY_KEY)
     if (!raw) return []
     try {
       const parsed = JSON.parse(raw)
@@ -45,17 +78,17 @@ export function createLocalStorageAdapter(storage: Storage): StorageAdapter {
 
     async setCharacterSelection(chars: Set<string>): Promise<void> {
       const arr = [...chars]
-      storage.setItem(SELECTION_KEY, JSON.stringify(arr))
+      safeSetItem(storage, SELECTION_KEY, JSON.stringify(arr))
     },
 
     async getDirection(): Promise<Direction> {
-      const raw = storage.getItem(DIRECTION_KEY)
+      const raw = safeGetItem(storage, DIRECTION_KEY)
       if (raw === 'romaji→kana' || raw === 'kana→romaji') return raw
       return 'kana→romaji'
     },
 
     async setDirection(direction: Direction): Promise<void> {
-      storage.setItem(DIRECTION_KEY, direction)
+      safeSetItem(storage, DIRECTION_KEY, direction)
     },
 
     async getScoreHistory(): Promise<ScoreEntry[]> {
@@ -65,11 +98,11 @@ export function createLocalStorageAdapter(storage: Storage): StorageAdapter {
     async addScoreEntry(entry: ScoreEntry): Promise<void> {
       const history = parseScoreHistory()
       history.push(entry)
-      storage.setItem(SCORE_HISTORY_KEY, JSON.stringify(history))
+      safeSetItem(storage, SCORE_HISTORY_KEY, JSON.stringify(history))
     },
 
     async clearScoreHistory(): Promise<void> {
-      storage.removeItem(SCORE_HISTORY_KEY)
+      safeRemoveItem(storage, SCORE_HISTORY_KEY)
     },
   }
 }
