@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: japanese-flash-card
+  labels:
+    app: japanese-flash-card
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: japanese-flash-card
+  template:
+    metadata:
+      labels:
+        app: japanese-flash-card
+    spec:
+      containers:
+        - name: japanese-flash-card
+          image: raj80dockerid/japanese-flash-card:PLACEHOLDER
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
