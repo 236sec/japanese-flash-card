@@ -1,5 +1,32 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: bun
+    image: oven/bun:1
+    command: ['sleep']
+    args: ['infinity']
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command: ['sleep']
+    args: ['infinity']
+    volumeMounts:
+    - name: docker-config
+      mountPath: /kaniko/.docker
+  volumes:
+  - name: docker-config
+    secret:
+      secretName: dockerhub-credentials
+      items:
+      - key: .dockerconfigjson
+        path: config.json
+"""
+        }
+    }
 
     // ── Parameters ──────────────────────────────────────────────
     parameters {
@@ -22,9 +49,8 @@ pipeline {
 
     // ── Environment ────────────────────────────────────────────
     environment {
-        IMAGE_NAME      = "${params.DOCKER_HUB_NAMESPACE}/japanese-flash-card"
-        DOCKER_REGISTRY = 'https://index.docker.io/v1/'
-        BUN_IMAGE       = 'oven/bun:1'
+        IMAGE_NAME  = "${params.DOCKER_HUB_NAMESPACE}/japanese-flash-card"
+        BUN_IMAGE   = 'oven/bun:1'
     }
 
     // ── Global options ─────────────────────────────────────────
@@ -58,11 +84,9 @@ pipeline {
                 expression { !params.SKIP_TESTS }
             }
             steps {
-                script {
-                    docker.image(BUN_IMAGE).inside {
-                        sh 'bun install --frozen-lockfile'
-                        sh 'bunx tsc --noEmit'
-                    }
+                container('bun') {
+                    sh 'bun install --frozen-lockfile'
+                    sh 'bunx tsc --noEmit'
                 }
             }
         }
@@ -73,10 +97,8 @@ pipeline {
                 expression { !params.SKIP_TESTS }
             }
             steps {
-                script {
-                    docker.image(BUN_IMAGE).inside {
-                        sh 'bun run test'
-                    }
+                container('bun') {
+                    sh 'bun run test'
                 }
             }
             post {
@@ -86,48 +108,25 @@ pipeline {
             }
         }
 
-        // ── 4. Build production Docker image ───────────────
-        stage('Build Image') {
+        // ── 4. Build + push with Kaniko ───────────────────
+        stage('Build & Push') {
             steps {
-                script {
-                    dockerImage = docker.build(IMAGE_NAME, '--no-cache .')
-                }
-            }
-        }
-
-        // ── 5. Security scan (Trivy) ──────────────────────
-        stage('Security Scan') {
-            steps {
-                script {
+                container('kaniko') {
                     sh """
-                        docker run --rm \\
-                            -v /var/run/docker.sock:/var/run/docker.sock \\
-                            aquasec/trivy image \\
-                            --severity HIGH,CRITICAL \\
-                            --no-progress \\
-                            ${FULL_IMAGE} || true
+                        /kaniko/executor \\
+                            --context ${env.WORKSPACE} \\
+                            --dockerfile ${env.WORKSPACE}/Dockerfile \\
+                            --destination ${FULL_IMAGE} \\
+                            --cache=true \\
+                            --cache-ttl=24h
                     """
                 }
             }
         }
 
-        // ── 6. Push to Docker Hub ─────────────────────────
-        stage('Push Image') {
-            steps {
-                script {
-                    docker.withRegistry(DOCKER_REGISTRY, 'dockerhub') {
-                        dockerImage.push(IMAGE_TAG)
-                        echo "✅ Pushed ${FULL_IMAGE} to Docker Hub"
-                    }
-                }
-            }
-        }
-
-        // ── 7. Trigger manifest update ────────────────────
+        // ── 5. Trigger manifest update ────────────────────
         stage('Trigger ManifestUpdate') {
             when {
-                // Only main-branch pushes update the manifest (dev)
-                // Prod updates are triggered manually via the updatemanifest job
                 branch 'main'
             }
             steps {
@@ -145,21 +144,13 @@ pipeline {
     // ── Post actions ───────────────────────────────────────────
     post {
         always {
-            // Free disk space on the Jenkins agent
-            script {
-                sh "docker rmi ${FULL_IMAGE} || true"
-            }
             cleanWs()
         }
         success {
-            echo "✅ Pipeline succeeded — ${FULL_IMAGE} is ready for deployment."
-            // Uncomment to notify via Slack:
-            // slackSend(color: 'good', message: "✅ `${FULL_IMAGE}` built & pushed successfully.")
+            echo "✅ Pipeline succeeded — ${FULL_IMAGE} pushed, ArgoCD will sync shortly."
         }
         failure {
             echo "❌ Pipeline failed — check the logs above."
-            // Uncomment to notify via Slack:
-            // slackSend(color: 'danger', message: "❌ Build failed for `${FULL_IMAGE}`.")
         }
     }
 }
