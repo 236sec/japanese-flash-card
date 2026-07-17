@@ -23,10 +23,6 @@ pipeline {
     // ── Environment ────────────────────────────────────────────
     environment {
         IMAGE_NAME      = "${params.DOCKER_HUB_NAMESPACE}/japanese-flash-card"
-        IMAGE_TAG       = params.IMAGE_TAG
-            ? params.IMAGE_TAG
-            : sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
-        FULL_IMAGE      = "${IMAGE_NAME}:${IMAGE_TAG}"
         DOCKER_REGISTRY = 'https://index.docker.io/v1/'
         BUN_IMAGE       = 'oven/bun:1'
     }
@@ -46,6 +42,10 @@ pipeline {
             steps {
                 checkout scm
                 script {
+                    env.IMAGE_TAG = params.IMAGE_TAG
+                        ? params.IMAGE_TAG
+                        : sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
+                    env.FULL_IMAGE = "${IMAGE_NAME}:${IMAGE_TAG}"
                     currentBuild.displayName = "#${BUILD_NUMBER} · ${IMAGE_TAG}"
                     echo "📦 Building ${FULL_IMAGE}"
                 }
@@ -125,13 +125,18 @@ pipeline {
 
         // ── 7. Trigger manifest update ────────────────────
         stage('Trigger ManifestUpdate') {
+            when {
+                // Only main-branch pushes update the manifest (dev)
+                // Prod updates are triggered manually via the updatemanifest job
+                branch 'main'
+            }
             steps {
                 script {
                     echo "🔄 Triggering updatemanifest with DOCKERTAG=${IMAGE_TAG}"
                     build job: 'updatemanifest', parameters: [
                         string(name: 'DOCKERTAG',  value: IMAGE_TAG),
                         string(name: 'IMAGE_NAME', value: IMAGE_NAME)
-                    ]
+                    ], wait: false
                 }
             }
         }
